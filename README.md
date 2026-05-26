@@ -1,16 +1,19 @@
 <div align="center">
 
-# OptiPlua
-
+# 🚀 OptiPlua
+### Plateforme SaaS d'Optimisation des Emplois du Temps par l'IA
 ### AI-Powered School Timetable Optimization Platform
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?style=for-the-badge&logo=jupyter&logoColor=white)](https://jupyter.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-UI-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Pandas](https://img.shields.io/badge/Pandas-Data%20Engine-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org)
-[![XGBoost](https://img.shields.io/badge/XGBoost-ML%20Model-FF6600?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
-[![Status](https://img.shields.io/badge/Status-Phase%202%20%F0%9F%94%84-yellow?style=for-the-badge)]()
+[![XGBoost](https://img.shields.io/badge/XGBoost-ML%20Scoring-FF6600?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
 
-**OptiPlua** est une plateforme SaaS intelligente qui génère, optimise et évalue automatiquement les emplois du temps pour les établissements éducatifs marocains — Écoles, Centres de Soutien et Universités.
+---
+
+**OptiPlua** est une plateforme SaaS intelligente conçue pour générer, optimiser et évaluer automatiquement les emplois du temps au sein des établissements scolaires marocains (Écoles, Centres de Soutien, et Universités). 
+
+Le système combine un **moteur heuristique performant** avec du **Machine Learning (XGBoost)** pour résoudre le problème complexe d'attribution des cours en respectant les contraintes d'enseignants, de salles, de classes et de quotas horaires.
 
 *Projet de recherche appliquée — Youssef EL ALEM & Douae MOUSSAOUI*
 
@@ -18,132 +21,102 @@
 
 </div>
 
-## Vue d'ensemble
+## 📌 Sommaire
+1. [Vue d'ensemble](#-vue-densemble)
+2. [Fonctionnalités Clés](#-fonctionnalités-clés)
+3. [Architecture du Projet](#-architecture-du-projet)
+4. [Moteur de Contraintes](#-moteur-de-contraintes-dures)
+5. [Système d'Évaluation & Scoring](#-système-dévaluation--scoring)
+6. [Installation & Démarrage](#-installation--démarrage)
 
-OptiPlua combine un **moteur heuristique** de contraintes dures avec du **Machine Learning (XGBoost)** pour résoudre le problème NP-difficile de la planification scolaire. Le système tient compte des disponibilités des enseignants, des capacités des salles, des niveaux autorisés et des contraintes métier propres à chaque type d'établissement.
+---
 
-```
-Données Synthétiques  →  Simulateur Heuristique  →  Scoring ML  →  Dashboard Streamlit
-      (Phase 1)                (Phase 2)              (Phase 3)        (Phase 4)
+## 🔍 Vue d'ensemble
+
+L'ordonnancement des cours est un problème NP-difficile. **OptiPlua** le résout efficacement à travers un workflow structuré :
+```text
+Générateur de Données ──> Simulateur Heuristique ──> Moteur de Scoring ──> Dashboard Streamlit
 ```
 
 ---
 
-## Fonctionnalités
+## ✨ Fonctionnalités Clés
 
-| Module | Description | Statut |
-|--------|-------------|--------|
-| **Générateur de données** | Crée des profils réalistes d'enseignants, classes, salles et matières | ✅ Terminé |
-| **Simulateur heuristique** | Assigne les cours en respectant 5 contraintes dures, semaine complète (20 créneaux) | ✅ Terminé |
-| **Export CSV enrichi** | `raw_schedules_test.csv` avec 16 colonnes (Jour, Matière, Enseignant, Salle, etc.) | ✅ Terminé |
-| **EDA & Analyse** | Exploration statistique des emplois du temps générés | 🔄 En cours |
-| **Système de Scoring** | Pénalise les trous, récompense la flexibilité | ⏳ À venir |
-| **Modèle XGBoost** | Prédit et optimise le score d'un planning | ⏳ À venir |
-| **Dashboard Streamlit** | Interface interactive pour visualiser et ajuster les plannings | ⏳ À venir |
+* **Génération Automatique :** Production instantanée d'emplois du temps optimisés et 100% exempts de collisions.
+* **Dashboard Interactif :** Interface graphique intuitive développée sous **Streamlit** permettant l'importation de fichiers CSV et la visualisation immédiate des résultats.
+* **Gestion des Salles Spécialisées :** Prise en charge automatique des laboratoires (Sciences, Informatique) et respect strict des capacités des salles face aux effectifs des classes.
+* **Optimisation du Confort (Scoring) :** Réduction des heures creuses (gaps) des professeurs et optimisation du taux d'occupation des salles de classe.
 
 ---
 
-## Architecture du Projet
+## 📂 Architecture du Projet
 
-```
+```text
 OptiPlua/
-├── data/
-│   ├── enseignants_data.csv      # 200 profils d'enseignants avec contraintes
-│   ├── salles_data.csv           # 80 salles (Amphithéâtre, Labo, Générale)
-│   ├── matieres_data.csv         # 24 matières par type d'établissement
-│   ├── classes_data.csv          # 150 classes avec niveaux et effectifs
-│   └── raw_schedules_test.csv    # Emploi du temps généré (output simulateur)
-│
-├── notebooks/
-│   ├── data_generator.ipynb      # Génération des données synthétiques
-│   └── simulation.ipynb          # Moteur heuristique v2.0
-│
-├── src/                          # [Phase 3] Scripts Python finaux
-│   ├── constraints.py
-│   ├── simulator.py
-│   └── scoring.py
-│
-└── README.md
+├── app.py                     # Dashboard interactif Streamlit (Interface Utilisateur)
+├── simulator.py               # Moteur heuristique d'affectation et de planification
+├── constraints.py             # Logique de vérification des contraintes & Calcul du score de qualité
+├── enseignants_data.csv       # Profils d'enseignants avec matières, niveaux et indisponibilités
+├── salles_data.csv            # Liste des salles de classe (Capacité, Type)
+├── classes_data.csv           # Liste des classes avec effectifs et niveaux
+├── matieres_data.csv          # Référentiel des matières par type d'établissement
+├── data_generator.ipynb       # Notebook de génération de données synthétiques réalistes
+└── simulation.ipynb           # Notebook d'exploration et de test du simulateur v2.0
 ```
 
 ---
 
-## Contraintes Implémentées
+## ⚙️ Moteur de Contraintes Dures
 
-Le moteur de simulation respecte **5 contraintes dures** :
+Le moteur d'affectation garantit qu'aucun emploi du temps généré ne viole les **5 contraintes dures (Hard Constraints)** suivantes :
 
-| ID | Contrainte | Description |
-|----|-----------|-------------|
-| C1 | Anti-collision Enseignant | Un prof ne peut pas avoir 2 cours simultanés |
-| C2 | Anti-collision Salle | Une salle ne peut accueillir qu'une classe à la fois |
-| C3 | Anti-collision Classe | Une classe ne peut pas avoir 2 cours en même temps |
-| C4 | Indisponibilités | Les créneaux bloqués de chaque enseignant sont respectés |
-| C5 | Quota horaire | `Heures_Max_Par_Semaine` de chaque enseignant est respecté |
-
----
-
-## Stack Technique
-
-- **Python 3.10+** — Langage principal
-- **Pandas** — Manipulation et analyse des données
-- **XGBoost** — Modèle de scoring ML (Phase 3)
-- **Streamlit** — Interface utilisateur (Phase 4)
-- **Jupyter Notebook** — Développement itératif
+| Code | Contrainte | Description |
+| :---: | :--- | :--- |
+| **C1** | **Anti-collision Enseignant** | Un enseignant ne peut pas dispenser deux cours différents simultanément. |
+| **C2** | **Anti-collision Salle** | Une salle ne peut pas accueillir deux classes différentes en même temps. |
+| **C3** | **Anti-collision Classe** | Une classe ne peut pas avoir deux matières ou cours prévus en même temps. |
+| **C4** | **Disponibilité Enseignant** | Respect strict des créneaux horaires d'indisponibilité de chaque professeur. |
+| **C5** | **Quota Horaire Hebdomadaire** | Pas de dépassement du volume horaire hebdomadaire autorisé par enseignant. |
 
 ---
 
-## Installation
+## 🏆 Système d'Évaluation & Scoring
 
+Afin de départager les plannings générés, OptiPlua évalue la qualité de chaque proposition sur une échelle de **0 à 100** via les critères suivants :
+
+1. **Heures Creuses des Enseignants (-2 pts / heure vide) :** Pénalise fortement les temps d'attente inutiles des professeurs entre deux cours sur une même journée.
+2. **Sous-utilisation des Salles (-1.5 pts / séance) :** Pénalise l'attribution de petites classes dans de grandes salles de cours (taux d'occupation < 40%).
+
+---
+
+## 🛠️ Installation & Démarrage
+
+### 1. Prérequis
+Assurez-vous que **Python 3.10+** est installé sur votre système.
+
+### 2. Installation des dépendances
+Ouvrez votre terminal dans le répertoire du projet et installez les packages nécessaires :
 ```bash
-# 1. Cloner le dépôt
-git clone https://github.com/youssefelalem/OptiPlua.git
-cd OptiPlua
-
-# 2. Créer et activer l'environnement virtuel
-python -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # Linux / macOS
-
-# 3. Installer les dépendances
-pip install pandas jupyter xgboost streamlit
+pip install pandas streamlit xgboost jupyter
 ```
 
-### Lancer la simulation
-
+### 3. Exécution du Dashboard Streamlit
+Démarrez l'application web interactive locale :
 ```bash
-# Ouvrir Jupyter
-jupyter notebook
-
-# Exécuter dans cet ordre :
-# 1. notebooks/data_generator.ipynb  → génère les 4 fichiers CSV
-# 2. notebooks/simulation.ipynb      → génère raw_schedules_test.csv
+streamlit run app.py
 ```
+Une page web s'ouvrira automatiquement à l'adresse : `http://localhost:8501`.
 
----
-
-## Roadmap
-
-```
-[Phase 1]  Cadrage & Génération des données         ✅  Terminée
-[Phase 2]  Simulateur heuristique & EDA             🔄  En cours
-[Phase 3]  Dataset massif, Scoring & XGBoost        ⏳  Planifiée
-[Phase 4]  Dashboard Streamlit & API                ⏳  Planifiée
-[Phase 5]  Export PDF & Déploiement SaaS            ⏳  Planifiée
-```
-
----
-
-## Auteurs
-
-| Nom | Rôle |
-|-----|------|
-| **Youssef EL ALEM** | Data Engineering, Simulation, ML |
-| **Douae MOUSSAOUI** | EDA, Scoring, Visualisation |
+### 4. Utilisation rapide
+1. Rendez-vous sur le panneau latéral à gauche.
+2. Importez les fichiers `enseignants_data.csv`, `salles_data.csv` et `classes_data.csv` présents à la racine du projet.
+3. Ajustez le curseur pour le nombre de candidats à tester.
+4. Cliquez sur **🚀 Générer les Meilleurs Emplois du Temps** pour découvrir les 3 meilleures options triées par score de qualité.
 
 ---
 
 <div align="center">
 
-*OptiPlua — Planification Intelligente pour l'Éducation*
+*OptiPlua — Conçu avec passion pour l'excellence de la gestion éducative. 🇲🇦*
 
 </div>
