@@ -1,3 +1,4 @@
+2. Importez les fichiers `data/enseignants_data.csv`, `data/salles_data.csv` et `data/classes_data.csv` présents dans le dossier `data/`.
 <div align="center">
 
 # OptiPlua
