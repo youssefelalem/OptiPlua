@@ -81,13 +81,20 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
 
 def select_features(df: pd.DataFrame) -> tuple:
     """Select features for modeling (no data leakage)"""
-    # Drop ID and Name columns
+    # Drop ID/Name and raw categorical/text columns (we keep their one-hot encodings)
     drop_cols = [col for col in df.columns if col.startswith('ID_') or col.startswith('Nom_')]
-    drop_cols.extend(['Creneau', 'Score', 'Heure_Fin'])  # Target + temporal/unused
-    
-    X = df.drop(columns=drop_cols)
+    # Remove raw text columns that were one-hot encoded or are not numeric
+    raw_categorical = ['Type_Etablissement', 'Type_Salle', 'Niveau', 'Jour', 'Heure_Debut']
+    drop_cols.extend(raw_categorical)
+    # Remove other unused/target columns
+    drop_cols.extend(['Creneau', 'Score', 'Heure_Fin'])
+
+    X = df.drop(columns=[c for c in drop_cols if c in df.columns])
     y = df['Score']
     
+    # Ensure all features are numeric (after dropping raw categoricals)
+    X = X.select_dtypes(include=[float, int, 'float64', 'int64']).copy()
+
     logger.info(f"Final feature set: {X.shape[1]} features")
     logger.info(f"Features: {X.columns.tolist()}")
     logger.info("✅ Features selected - No data leakage detected")
