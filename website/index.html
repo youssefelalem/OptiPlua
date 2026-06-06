@@ -606,12 +606,12 @@
 <!-- ═══════════════════ HERO ═══════════════════ -->
 <header class="hero">
     <img src="assets/logo.svg" alt="Logo OptiPlua" class="hero-logo">
-    <div class="hero-badge">Projet de Recherche Appliquee · Data Science &amp; IA</div>
-    <h1>OptiPlua — Optimisation <span>Intelligente</span> des Emplois du Temps Scolaires</h1>
+    <div class="hero-badge">Projet de Machine Learning · Data Science</div>
+    <h1>OptiPlua — Un Projet de <span>Machine Learning</span> pour les Emplois du Temps Scolaires</h1>
     <p class="subtitle">
-        Une plateforme qui combine un <strong>moteur heuristique de contraintes</strong> et un modele de
-        <strong>Machine Learning (XGBoost)</strong> pour generer, evaluer et classer automatiquement
-        les emplois du temps des etablissements educatifs marocains.
+        Au coeur du projet : un modele de <strong>Machine Learning (XGBoost)</strong> qui apprend a
+        <strong>predire la qualite</strong> d'un emploi du temps. Un moteur heuristique l'alimente en
+        donnees d'entrainement et en emplois du temps candidats, que le modele evalue et classe automatiquement.
     </p>
     <div class="hero-meta">
         <div class="hero-meta-item">
@@ -620,7 +620,7 @@
         </div>
         <div class="hero-meta-item">
             <div class="label">Domaine</div>
-            <div class="value">Optimisation Combinatoire &amp; ML</div>
+            <div class="value">Machine Learning Applique</div>
         </div>
         <div class="hero-meta-item">
             <div class="label">Annee</div>
@@ -637,33 +637,34 @@
         <div class="abstract">
             <div class="abstract-label">// Abstract</div>
             <p>
-                La construction d'un emploi du temps scolaire est un probleme d'optimisation combinatoire
-                de classe <strong>NP-difficile</strong> : le nombre de combinaisons possibles explose des que
-                le nombre d'enseignants, de salles et de classes augmente. Il devient impossible de toutes
-                les explorer pour trouver la solution parfaite.
+                <strong>OptiPlua est un projet de Machine Learning</strong> applique a la planification scolaire.
+                Son objectif central : entrainer un modele capable de <strong>predire la qualite</strong> d'un emploi
+                du temps a partir de ses caracteristiques, la ou les regles ecrites a la main atteignent leurs limites.
             </p>
             <p>
-                <strong>OptiPlua</strong> propose une approche en deux temps. D'abord, un <strong>moteur heuristique</strong>
-                genere rapidement plusieurs emplois du temps valides en respectant 7 contraintes dures
-                (anti-collisions, disponibilites, quotas horaires...). Ensuite, un systeme de <strong>scoring</strong>
-                — mathematique puis enrichi par un modele <strong>XGBoost</strong> entraine sur 182 000 seances —
-                evalue la qualite de chaque solution et classe les meilleures.
+                Le pipeline ML suit les etapes canoniques du domaine. Un <strong>moteur heuristique</strong> joue le role
+                de <strong>generateur de donnees</strong> : il produit 182 000 seances annotees servant a l'entrainement,
+                ainsi que les emplois du temps candidats a evaluer. Vient ensuite le <strong>feature engineering</strong>
+                (extraction, encodage, normalisation), puis l'entrainement d'un modele <strong>XGBoost</strong>
+                (Gradient Boosting), et enfin l'<strong>inference</strong> qui attribue un score de qualite a chaque solution.
+                Une boucle de <strong>feedback humain</strong> permet au modele de s'ameliorer avec l'usage.
             </p>
             <p>
-                Le tout est accessible via un <strong>tableau de bord interactif (Streamlit)</strong> permettant
-                a un administrateur de saisir ses donnees, lancer l'optimisation, visualiser les meilleurs
-                emplois du temps sous forme de grilles colorees et les telecharger.
+                Le modele est mis en production via un <strong>tableau de bord interactif (Streamlit)</strong> :
+                l'administrateur saisit ses donnees, lance la generation, et le modele ML classe et affiche
+                les meilleurs emplois du temps, telechargeables en un clic.
             </p>
             <div class="keywords">
                 <strong style="color:var(--on-surface-variant);">Mots-cles :</strong>
-                <span>Optimisation combinatoire</span>
-                <span>Heuristiques</span>
                 <span>Machine Learning</span>
                 <span>XGBoost</span>
                 <span>Gradient Boosting</span>
                 <span>Feature Engineering</span>
-                <span>Streamlit</span>
+                <span>Apprentissage supervise</span>
+                <span>Regression</span>
                 <span>Donnees synthetiques</span>
+                <span>Heuristiques</span>
+                <span>Streamlit</span>
                 <span>Planification scolaire</span>
             </div>
         </div>
