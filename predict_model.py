@@ -32,46 +32,12 @@ class OptiPluaPredictor:
         logger.info("Model loaded successfully.")
         logger.info(f"   - Features: {len(self.feature_names)}")
         logger.info(f"   - Model type: {type(self.model).__name__}")
-    
-    def engineer_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Apply same feature engineering as training"""
-        df_eng = df.copy()
-        
-        # Taux_Remplissage
-        if 'Nb_Etudiants' in df_eng.columns and 'Capacite_Salle' in df_eng.columns:
-            df_eng['Taux_Remplissage'] = df_eng['Nb_Etudiants'] / df_eng['Capacite_Salle']
-            df_eng['Taux_Remplissage'] = df_eng['Taux_Remplissage'].clip(0, 1)
-        
-        # Heure_Debut_Num
-        if 'Heure_Debut' in df_eng.columns:
-            df_eng['Heure_Debut_Num'] = pd.to_datetime(df_eng['Heure_Debut'], format='%H:%M').dt.hour
-        
-        # Jour_Encoded
-        if 'Jour' in df_eng.columns:
-            jour_map = {'Lundi': 0, 'Mardi': 1, 'Mercredi': 2, 'Jeudi': 3, 'Vendredi': 4, 'Samedi': 5}
-            df_eng['Jour_Encoded'] = df_eng['Jour'].map(jour_map)
-        
-        # One-Hot Encoding
-        for col, prefix in [('Type_Etablissement', 'Etab'), ('Type_Salle', 'Salle'), ('Niveau', 'Niveau')]:
-            if col in df_eng.columns:
-                dummies = pd.get_dummies(df_eng[col], prefix=prefix)
-                df_eng = pd.concat([df_eng, dummies], axis=1)
-        
-        return df_eng
-    
-    def prepare_features(self, df: pd.DataFrame) -> np.ndarray:
-        """Prepare features for prediction"""
-        df_eng = self.engineer_features(df)
 
-        for feat in self.feature_names:
-            if feat not in df_eng.columns:
-                logger.warning(f"Feature '{feat}' missing, filling with 0")
-                df_eng[feat] = 0
+    def prepare_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Aggregate one timetable into the model's feature row."""
+        X = features_for_timetable(df)
+        return X.reindex(columns=self.feature_names)
 
-        X = df_eng[self.feature_names].copy()
-        X_scaled = self.scaler.transform(X)
-        return X_scaled
-    
     def predict(self, df: pd.DataFrame) -> np.ndarray:
         """Predict the quality score (0-100) of one timetable.
 
