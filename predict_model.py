@@ -58,19 +58,14 @@ class OptiPluaPredictor:
     
     def prepare_features(self, df: pd.DataFrame) -> np.ndarray:
         """Prepare features for prediction"""
-        # Engineer features
         df_eng = self.engineer_features(df)
-        
-        # Select only training features
-        X = df_eng[self.feature_names].copy()
-        
-        # Fill missing features with 0
+
         for feat in self.feature_names:
-            if feat not in X.columns:
-                logger.warning(f"⚠️  Warning: Feature '{feat}' missing, filling with 0")
-                X[feat] = 0
-        
-        # Scale
+            if feat not in df_eng.columns:
+                logger.warning(f"Feature '{feat}' missing, filling with 0")
+                df_eng[feat] = 0
+
+        X = df_eng[self.feature_names].copy()
         X_scaled = self.scaler.transform(X)
         return X_scaled
     
