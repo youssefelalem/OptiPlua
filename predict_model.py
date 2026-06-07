@@ -1,32 +1,35 @@
 """
-OptiPlua ML Inference Module
-Makes predictions using trained XGBoost model
+OptiPlua ML Inference Module.
+
+Predicts ONE quality score for a whole timetable. The input DataFrame (all the
+session rows of a single timetable) is aggregated with the same
+`aggregate_timetable` used at training time, then fed to the XGBoost model.
 """
 
 import logging
 from pathlib import Path
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 import joblib
-from typing import Union
+
+from models.feature_engineering import features_for_timetable
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class OptiPluaPredictor:
-    """Inference wrapper for OptiPlua ML model"""
-    
+    """Inference wrapper for the OptiPlua timetable-quality model."""
+
     def __init__(self, model_dir: str = 'models'):
-        """Load trained model and artifacts"""
         self.model_dir = Path(model_dir)
-        
+
         logger.info(f"Loading model from {self.model_dir}/optiplua_model.pkl...")
         self.model = joblib.load(self.model_dir / 'optiplua_model.pkl')
-        self.scaler = joblib.load(self.model_dir / 'scaler.pkl')
         self.feature_names = joblib.load(self.model_dir / 'feature_names.pkl')
-        
-        logger.info("✅ Model loaded successfully!")
+
+        logger.info("Model loaded successfully.")
         logger.info(f"   - Features: {len(self.feature_names)}")
         logger.info(f"   - Model type: {type(self.model).__name__}")
     
@@ -70,74 +73,53 @@ class OptiPluaPredictor:
         return X_scaled
     
     def predict(self, df: pd.DataFrame) -> np.ndarray:
-        """Make predictions on dataframe"""
-        X_scaled = self.prepare_features(df)
-        predictions = self.model.predict(X_scaled)
-        predictions = np.clip(predictions, 0, 100)  # Scores should be 0-100
-        return predictions
-    
+        """Predict the quality score (0-100) of one timetable.
+
+        Returns a length-1 array so existing callers (e.g. ``np.mean(...)``)
+        keep working.
+        """
+        X = self.prepare_features(df)
+        pred = self.model.predict(X)
+        return np.clip(pred, 0, 100)
+
     def predict_batch(self, csv_path: str, output_path: str = None) -> pd.DataFrame:
-        """Predict on CSV file"""
+        """Score each timetable in a CSV (one row per ``Version``)."""
         df = pd.read_csv(csv_path)
-        predictions = self.predict(df)
-        
-        result = df.copy()
-        result['Predicted_Score'] = predictions
-        
+        if 'Version' in df.columns:
+            rows = [
+                {'Version': ver, 'Predicted_Score': float(self.predict(grp)[0])}
+                for ver, grp in df.groupby('Version')
+            ]
+            result = pd.DataFrame(rows)
+        else:
+            result = pd.DataFrame([{'Predicted_Score': float(self.predict(df)[0])}])
+
         if output_path:
             result.to_csv(output_path, index=False)
             logger.info(f"Predictions saved to {output_path}")
-        
         return result
 
 
 def demo():
-    """Demo inference scenarios"""
-    print("\n🎓 OptiPlua — Model Inference Demo\n")
-    
+    """Demo inference on the generated timetables."""
+    print("\nOptiPlua - Model Inference Demo\n")
+
     predictor = OptiPluaPredictor()
-    
-    # Demo 1: Batch prediction
-    print("="*60)
-    print("DEMO 1: Predicting on raw_schedules_test.csv")
-    print("="*60)
-    
+
+    print("=" * 60)
+    print("DEMO: Scoring timetables in raw_schedules_test.csv")
+    print("=" * 60)
     try:
-        df_raw = pd.read_csv('data/raw_schedules_test.csv')
-        predictions = predictor.predict(df_raw)
-        
-        print(f"\nPredictions (first 10 samples):")
-        print(f"  Min score:  {predictions.min():.2f}")
-        print(f"  Max score:  {predictions.max():.2f}")
-        print(f"  Mean score: {predictions.mean():.2f}")
-        print(f"  Std dev:    {predictions.std():.2f}")
+        result = predictor.predict_batch('data/raw_schedules_test.csv')
+        print(f"\nScored {len(result)} timetable(s):")
+        print(result.to_string(index=False))
+        if 'Predicted_Score' in result.columns and len(result) > 1:
+            s = result['Predicted_Score']
+            print(f"\n  Range: {s.min():.2f} - {s.max():.2f}  |  Std: {s.std():.2f}")
     except Exception as e:
-        print(f"⚠️  Error: {e}")
-    
-    # Demo 2: Single schedule prediction
-    print("\n" + "="*60)
-    print("DEMO 2: Creating and scoring a single schedule")
-    print("="*60)
-    
-    sample_schedule = pd.DataFrame({
-        'Niveau': ['Licence_1'],
-        'Nb_Etudiants': [45],
-        'Capacite_Salle': [60],
-        'Heure_Debut': ['08:00'],
-        'Jour': ['Lundi'],
-        'Type_Etablissement': ['Universite'],
-        'Type_Salle': ['Generale'],
-        'Version': [0]
-    })
-    
-    pred = predictor.predict(sample_schedule)[0]
-    
-    print(f"\nSample Schedule:")
-    print(f"  {sample_schedule['Nb_Etudiants'][0]} students → {sample_schedule['Capacite_Salle'][0]}-seat room")
-    print(f"  {sample_schedule['Type_Etablissement'][0]}, {sample_schedule['Niveau'][0]}, {sample_schedule['Jour'][0]} {sample_schedule['Heure_Debut'][0]}")
-    print(f"\n  🎯 Predicted Quality Score: {pred:.2f}/100")
-    
-    print("\n✅ Inference demo complete!\n")
+        print(f"Error: {e}")
+
+    print("\nInference demo complete.\n")
 
 
 if __name__ == '__main__':
