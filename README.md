@@ -15,7 +15,7 @@ educational institutions — schools, tutoring centers and universities — by
 combining a **constraint-based heuristic engine** with a **machine-learning
 quality model (XGBoost)**.
 
-*Master's Final-Year Project (PFE) — **Youssef EL ALEM** & **Douae MOUSSAOUI***
+*End-of-year project — Master Big Data & Data Science — **Youssef EL ALEM** & **Douae MOUSSAOUI***
 *Faculté des Sciences Ben M'Sik · Université Hassan II de Casablanca*
 
 </div>
@@ -66,8 +66,7 @@ train/serve mismatch**.
 | RMSE | ≈ 1.08 | **0.497** |
 | Discrimination | ❌ none | ✅ clear |
 
-> 📄 The full methodology is documented in the LaTeX report under [`rapport/`](rapport/)
-> and in [`docs/ML_PIPELINE.md`](docs/ML_PIPELINE.md).
+> 📄 The full ML methodology is documented in [`docs/ML_PIPELINE.md`](docs/ML_PIPELINE.md).
 
 ## Project structure
 
@@ -85,14 +84,11 @@ OptiPlua/
 │   ├── optiplua_model.pkl       # trained model
 │   ├── feature_names.pkl        # feature order
 │   └── metrics.json             # evaluation metrics
-├── data/                        # synthetic datasets, ML dataset, EDA figures
+├── data/                        # synthetic datasets, ML dataset & EDA figures
 ├── src/
 │   ├── bootstrap_data.py        # (legacy) session-level data generator
 │   └── feedback_handler.py      # Human-in-the-Loop feedback logging
-├── notebooks/                   # data generation, EDA, simulation
 ├── logo/                        # brand assets (SVG)
-├── rapport/                     # LaTeX PFE report (+ figures & image prompts)
-├── presentation/                # poster & slide-deck generation prompts
 ├── docs/                        # technical documentation
 ├── requirements.txt
 └── README.md
@@ -157,8 +153,8 @@ ranked = TimetableScorer().rank_variants(variants, method="ml")
 | **Youssef EL ALEM** | Data engineering, heuristic simulator, ML pipeline |
 | **Douae MOUSSAOUI** | EDA, scoring design, visualization & reporting |
 
-Supervised at the **Faculté des Sciences Ben M'Sik**, Université Hassan II de
-Casablanca — Master's Final-Year Project, 2025/2026.
+**Faculté des Sciences Ben M'Sik**, Université Hassan II de Casablanca —
+Master Big Data & Data Science, end-of-year project, 2025/2026.
 
 ## License
 

@@ -29,7 +29,6 @@ presentation/
 
 # ── Hors code source de l'application ────────────────────────────────
 notebooks/
-logo/
 website/
 
 # ── Donnees sensibles / d'execution ──────────────────────────────────
