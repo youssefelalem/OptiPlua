@@ -624,7 +624,7 @@
         </div>
         <div class="hero-meta-item">
             <div class="label">Annee</div>
-            <div class="value">2024 / 2025</div>
+            <div class="value">2025 / 2026</div>
         </div>
     </div>
 </header>
@@ -643,11 +643,13 @@
             </p>
             <p>
                 Le pipeline ML suit les etapes canoniques du domaine. Un <strong>moteur heuristique</strong> joue le role
-                de <strong>generateur de donnees</strong> : il produit 182 000 seances annotees servant a l'entrainement,
-                ainsi que les emplois du temps candidats a evaluer. Vient ensuite le <strong>feature engineering</strong>
-                (extraction, encodage, normalisation), puis l'entrainement d'un modele <strong>XGBoost</strong>
-                (Gradient Boosting), et enfin l'<strong>inference</strong> qui attribue un score de qualite a chaque solution.
-                Une boucle de <strong>feedback humain</strong> permet au modele de s'ameliorer avec l'usage.
+                de <strong>generateur de donnees</strong> : il produit des <strong>variantes d'emplois du temps</strong>, chacune
+                notee par un score heuristique, qui constituent le jeu d'entrainement. Point cle du projet : la modelisation
+                se fait au <strong>niveau de l'emploi du temps complet</strong> (et non par seance), en agregeant chaque
+                emploi du temps en un vecteur de caracteristiques. Vient ensuite l'entrainement d'un modele <strong>XGBoost</strong>
+                (Gradient Boosting), puis l'<strong>inference</strong> qui attribue un score de qualite a chaque variante. Le modele
+                atteint un <strong>R² = 0,9996</strong> et discrimine nettement les variantes. Une boucle de
+                <strong>feedback humain</strong> permet au modele de s'ameliorer avec l'usage.
             </p>
             <p>
                 Le modele est mis en production via un <strong>tableau de bord interactif (Streamlit)</strong> :
@@ -745,11 +747,11 @@
                     <div class="desc">Types d'etablissements<br><em>Ecoles · Universites · Centres de Soutien</em></div>
                 </div>
                 <div class="stat-box">
-                    <div class="num" style="color:var(--primary);">24</div>
+                    <div class="num" style="color:var(--primary);">23</div>
                     <div class="desc">Matieres prises en charge<br><em>du Primaire au Master</em></div>
                 </div>
                 <div class="stat-box">
-                    <div class="num" style="color:var(--accent-green);">7</div>
+                    <div class="num" style="color:var(--accent-green);">9</div>
                     <div class="desc">Contraintes dures<br><em>verifiees a chaque placement</em></div>
                 </div>
                 <div class="stat-box">
@@ -1051,7 +1053,7 @@
     prof    = random.choice(profs_compat)    # Prof compatible au hasard
     salle   = random.choice(salles_compat)   # Salle adaptee au hasard
 
-    valide, raison = verifier_contraintes(...)  # On teste les 7 regles
+    valide, raison = verifier_contraintes(...)  # On teste les 9 regles
 
     if valide:
         # On reserve le creneau pour le prof, la salle et la classe
@@ -1085,7 +1087,7 @@
         <p class="section-intro">
             Un emploi du temps n'est <strong>valide</strong> que s'il respecte toutes les contraintes dures.
             Une contrainte "dure" est non-negociable : la violer rend l'emploi du temps inutilisable
-            (deux cours dans la meme salle au meme moment, par exemple). Voici les 7 regles que nous verifions.
+            (deux cours dans la meme salle au meme moment, par exemple). Voici les 9 regles (C1 a C9) que nous verifions.
         </p>
 
         <table class="data-table">
@@ -1100,6 +1102,8 @@
                 <tr><td><span class="tag-id">C5</span></td><td>Volume horaire max</td><td>Ne pas depasser le quota hebdomadaire d'un prof</td><td>Un prof a 18h/semaine ? On ne lui en donne pas 20</td></tr>
                 <tr><td><span class="tag-id">C6</span></td><td>Adequation Laboratoire</td><td>Une matiere a labo va dans une salle de type labo</td><td>La chimie se fait dans un labo, pas une salle normale</td></tr>
                 <tr><td><span class="tag-id">C7</span></td><td>Capacite de la salle</td><td>La salle doit pouvoir accueillir tous les eleves</td><td>30 eleves ne tiennent pas dans une salle de 20 places</td></tr>
+                <tr><td><span class="tag-id">C8</span></td><td>Heures consecutives max</td><td>Limite d'heures de cours consecutives par enseignant</td><td>Pas 8h de cours d'affilee sans pause</td></tr>
+                <tr><td><span class="tag-id">C9</span></td><td>Heures journalieres max</td><td>Plafond d'heures par jour et par enseignant</td><td>Au maximum 8h de cours dans une meme journee</td></tr>
             </tbody>
         </table>
 
@@ -1367,7 +1371,7 @@
         <p class="section-intro">
             Le scoring heuristique est rapide mais "fige" : ses regles sont ecrites a la main. Le Machine Learning
             apprend, lui, directement des donnees. Notre modele <strong>XGBoost</strong> apprend a predire le score
-            de qualite d'une seance a partir de ses caracteristiques.
+            de qualite d'un <strong>emploi du temps complet</strong> a partir de ses caracteristiques agregees.
         </p>
 
         <div class="diagram-container">
@@ -1375,89 +1379,97 @@
             <div class="pipeline-flow">
                 <div class="pipeline-box" style="border-color:var(--primary-container);">
                     <div class="icon" style="color:var(--primary);"><span class="material-symbols-outlined" style="font-size:2rem;">storage</span></div>
-                    <div class="label">1. Bootstrap</div>
-                    <div class="desc">182 000 seances<br>generees</div>
+                    <div class="label">1. Generation</div>
+                    <div class="desc">90 emplois du temps<br>notes</div>
                 </div>
                 <div class="pipeline-arrow">&#10132;</div>
                 <div class="pipeline-box" style="border-color:var(--accent-purple);">
                     <div class="icon" style="color:var(--accent-purple);"><span class="material-symbols-outlined" style="font-size:2rem;">engineering</span></div>
-                    <div class="label">2. Features</div>
-                    <div class="desc">extraction +<br>encodage + scaling</div>
+                    <div class="label">2. Agregation</div>
+                    <div class="desc">6 features<br>timetable-level</div>
                 </div>
                 <div class="pipeline-arrow">&#10132;</div>
                 <div class="pipeline-box" style="border-color:var(--accent-orange);">
                     <div class="icon" style="color:var(--accent-orange);"><span class="material-symbols-outlined" style="font-size:2rem;">account_tree</span></div>
                     <div class="label">3. Training</div>
-                    <div class="desc">500 arbres<br>XGBoost</div>
+                    <div class="desc">200 arbres<br>XGBoost</div>
                 </div>
                 <div class="pipeline-arrow">&#10132;</div>
                 <div class="pipeline-box" style="border-color:var(--accent-green);">
                     <div class="icon" style="color:var(--accent-green);"><span class="material-symbols-outlined" style="font-size:2rem;">query_stats</span></div>
-                    <div class="label">4. Prediction</div>
-                    <div class="desc">score 0-100<br>par seance</div>
+                    <div class="label">4. Inference</div>
+                    <div class="desc">score 0-100<br>par emploi du temps</div>
                 </div>
             </div>
         </div>
 
         <!-- 8.1 Bootstrap -->
-        <h3 style="margin-top:2.5rem;">Etape 1 — Les donnees d'entrainement (Bootstrap)</h3>
+        <h3 style="margin-top:2.5rem;">Etape 1 — Le jeu d'entrainement (niveau emploi du temps)</h3>
         <p style="color:var(--on-surface-variant); margin-bottom:1rem;">
-            Le script <code>src/bootstrap_data.py</code> genere <strong>150 versions</strong> d'emplois du temps,
-            chacune notee par une fonction de scoring enrichie, produisant un dataset de <strong>182 000 seances</strong>
-            avec leur score (<code>bootstrap_schedules.csv</code>).
+            Le script <code>generate_ml_dataset.py</code> genere, pour chacun des 3 types d'etablissement,
+            <strong>30 variantes</strong> d'emplois du temps — soit <strong>90 emplois du temps</strong> au total — chacun
+            note par le <strong>meme score heuristique</strong> que celui utilise en production
+            (<code>data/ml_timetable_dataset.csv</code>). Les scores s'etalent de <strong>16 a 97 / 100</strong>,
+            ce qui donne une cible riche et apprenable.
         </p>
-        <div class="why-box">
-            <span class="material-symbols-outlined why-icon">data_usage</span>
+        <div class="why-box" style="border-color:rgba(46,204,113,0.4);">
+            <span class="material-symbols-outlined why-icon" style="color:var(--accent-green);">lightbulb</span>
             <div class="why-content">
-                <div class="why-label">Pourquoi "bootstrap" et 150 versions ?</div>
+                <div class="why-label" style="color:var(--accent-green);">Le point cle : la bonne granularite de la cible</div>
                 <p>
-                    Un modele ML a besoin de <strong>beaucoup d'exemples varies</strong> pour apprendre. En generant 150
-                    emplois du temps de qualites differentes (du tres bon au mediocre), on cree un jeu de donnees riche
-                    ou le modele peut apprendre ce qui distingue une bonne seance d'une mauvaise. Le terme "bootstrap"
-                    signifie qu'on <strong>amorce</strong> le systeme avec des donnees auto-generees, faute de donnees reelles annotees.
+                    Une premiere version modelisait chaque <strong>seance</strong> individuellement, en lui attribuant le
+                    score de l'emploi du temps complet. Probleme : ~182 000 lignes ne portaient que 150 valeurs de score
+                    (la meme repetee sur toutes les seances d'une variante). Le modele ne pouvait qu'apprendre la moyenne —
+                    <strong style="color:var(--accent-red);">R² ≈ 0</strong>, aucune discrimination. La solution : modeliser au
+                    <strong>niveau de l'emploi du temps complet</strong> en agregeant ses seances en un seul vecteur.
+                    Resultat : <strong style="color:var(--accent-green);">R² = 0,9996</strong>.
                 </p>
             </div>
         </div>
 
         <!-- 8.2 Feature Engineering -->
-        <h3 style="margin-top:2.5rem;">Etape 2 — Feature Engineering (Extraction de caracteristiques)</h3>
+        <h3 style="margin-top:2.5rem;">Etape 2 — Agregation (caracteristiques timetable-level)</h3>
         <p style="color:var(--on-surface-variant); margin-bottom:1.5rem;">
-            Le modele ne comprend pas "Lundi" ou "MATH". Il faut transformer ces donnees brutes en
-            <strong>nombres significatifs</strong>. C'est le role de <code>models/feature_engineering.py</code>.
+            Chaque emploi du temps (des centaines de seances) est reduit a <strong>un seul vecteur de 6 caracteristiques</strong>,
+            volontairement aligne sur les 4 termes de penalite du score. C'est le role de
+            <code>models/feature_engineering.py</code>.
         </p>
 
         <div class="two-col">
             <div>
                 <table class="data-table">
-                    <thead><tr><th>Feature creee</th><th>Calcul &amp; sens</th></tr></thead>
+                    <thead><tr><th>Feature (par emploi du temps)</th><th>Sens</th></tr></thead>
                     <tbody>
-                        <tr><td><code>H_Start</code></td><td>Heure de debut en entier ("08:00" → 8)</td></tr>
-                        <tr><td><code>Est_Matin</code></td><td>1 si le cours est avant 12h, 0 sinon</td></tr>
-                        <tr><td><code>Taux_Remplissage</code></td><td>Nb_Etudiants / Capacite_Salle</td></tr>
-                        <tr><td><code>Pression_Planif</code></td><td>log(1 + Nb_Tentatives) — difficulte de placement</td></tr>
-                        <tr><td><code>Teacher_Day_Gap</code></td><td>Total des heures de trous du prof ce jour</td></tr>
-                        <tr><td><code>Room_Avg_Util</code></td><td>Utilisation moyenne de la salle sur la semaine</td></tr>
+                        <tr><td><code>teacher_gap_per_session</code></td><td>Heures creuses des enseignants, par seance</td></tr>
+                        <tr><td><code>class_gap_per_session</code></td><td>Heures creuses des classes, par seance</td></tr>
+                        <tr><td><code>overload_per_session</code></td><td>Blocs (classe, jour) a plus de 4 seances, par seance</td></tr>
+                        <tr><td><code>low_util_per_session</code></td><td>Salles remplies a moins de 40%, par seance</td></tr>
+                        <tr><td><code>avg_util</code></td><td>Taux d'occupation moyen des salles</td></tr>
+                        <tr><td><code>n_sessions</code></td><td>Taille de l'emploi du temps</td></tr>
                     </tbody>
                 </table>
             </div>
             <div>
-                <div class="math-block" style="margin-top:0;">
-                    <div class="math-label">Pression de planification</div>
-                    <div>$$\text{Pression} = \ln(1 + N_{\text{tentatives}})$$</div>
-                    <div class="math-explanation">
-                        <strong>Pourquoi le logarithme ?</strong> Il attenue les valeurs extremes. La difference entre
-                        1 et 50 tentatives est tres significative (placement facile vs. difficile), mais celle entre
-                        200 et 250 ne l'est plus. Le log capture cette intuition.
+                <div class="why-box" style="margin-top:0;">
+                    <span class="material-symbols-outlined why-icon">insights</span>
+                    <div class="why-content">
+                        <div class="why-label">Pourquoi ces 6 features ?</div>
+                        <p>
+                            Elles refletent exactement les <strong>4 termes de penalite</strong> du score (trous profs,
+                            trous classes, surcharge, sous-utilisation), plus le taux d'occupation moyen et la taille.
+                            Le modele apprend ainsi a <strong>reconstituer le score</strong> a partir de signaux agreges
+                            sur l'emploi du temps entier.
+                        </p>
                     </div>
                 </div>
                 <div class="why-box" style="margin-top:1rem;">
-                    <span class="material-symbols-outlined why-icon">transform</span>
+                    <span class="material-symbols-outlined why-icon">sync_alt</span>
                     <div class="why-content">
-                        <div class="why-label">Pourquoi encoder et normaliser ?</div>
+                        <div class="why-label">Meme pipeline a l'entrainement et a l'inference</div>
                         <p>
-                            <strong>LabelEncoder</strong> convertit les categories en nombres (Lundi=0, Mardi=1...).
-                            <strong>MinMaxScaler</strong> ramene toutes les valeurs entre 0 et 1, pour qu'aucune variable
-                            (comme la capacite, qui peut valoir 200) n'ecrase les autres par son echelle.
+                            La fonction <code>aggregate_timetable</code> sert <strong>aussi bien a l'entrainement</strong>
+                            (un exemple par variante generee) <strong>qu'a l'inference</strong> (le DataFrame recu est un
+                            emploi du temps complet). Aucun decalage <em>train/serve</em> possible.
                         </p>
                     </div>
                 </div>
@@ -1469,34 +1481,30 @@
                 <div class="code-dot" style="background:#EF4444;"></div>
                 <div class="code-dot" style="background:#F59E0B;"></div>
                 <div class="code-dot" style="background:#2ECC71;"></div>
-                <span class="code-filename">models/feature_engineering.py — preprocess_data()</span>
+                <span class="code-filename">models/feature_engineering.py — aggregate_timetable()</span>
             </div>
-            <pre><code class="language-python">def preprocess_data(df, is_training=True):
-    # 1. Features temporelles
-    df['H_Start'] = df['Heure_Debut'].apply(lambda x: int(x.split(':')[0]))
-    df['Est_Matin'] = (df['H_Start'] < 12).astype(int)
+            <pre><code class="language-python">def aggregate_timetable(df):
+    """Reduit un emploi du temps (N seances) a un seul vecteur de features."""
+    n = len(df)
+    g = df.copy()
+    g['_util'] = g['Nb_Etudiants'] / g['Capacite_Salle']
 
-    # 2. Features logistiques
-    df['Taux_Remplissage'] = df['Nb_Etudiants'] / df['Capacite_Salle']
-    df['Pression_Planif'] = np.log1p(df['Nb_Tentatives'])
+    teacher_gaps = _sum_gaps(g, 'ID_Enseignant')   # heures creuses profs
+    class_gaps   = _sum_gaps(g, 'ID_Classe')        # heures creuses classes
+    low_util     = int((g['_util'] < 0.4).sum())    # salles sous-remplies
 
-    # 3. Features agregees (signaux de qualite)
-    df['Room_Avg_Util'] = df.groupby('ID_Salle')['Taux_Remplissage'].transform('mean')
-
-    # 4. Encodage + normalisation
-    if is_training:
-        for col in COLS_CATEGORIQUES:
-            le = LabelEncoder(); df[col] = le.fit_transform(df[col])
-        scaler = MinMaxScaler(); df[num_cols] = scaler.fit_transform(df[num_cols])
-        joblib.dump(artefacts, ARTEFACTS_PATH)   # Sauvegarde pour l'inference
-    else:
-        artefacts = joblib.load(ARTEFACTS_PATH)   # Reutilise les memes encodeurs
-    return X, y, weights</code></pre>
+    return {
+        'teacher_gap_per_session': teacher_gaps / n,
+        'class_gap_per_session':   class_gaps / n,
+        'low_util_per_session':    low_util / n,
+        'avg_util':                float(g['_util'].mean()),
+        'n_sessions':              float(n),
+    }</code></pre>
             <div class="code-explanation">
                 <p>
-                    Point crucial : en entrainement (<code>is_training=True</code>), on <strong>cree et sauvegarde</strong>
-                    les encodeurs. En inference, on <strong>recharge exactement les memes</strong>. Sans cela, "Lundi"
-                    pourrait etre encode 0 a l'entrainement et 3 a la prediction — le modele ne comprendrait plus rien.
+                    Chaque emploi du temps (des centaines de seances) est <strong>reduit a un seul vecteur</strong>.
+                    C'est cette agregation qui aligne la granularite des <em>features</em> sur celle du <em>label</em>
+                    (un score par emploi du temps) — la cle du passage de R² ≈ 0 a <strong>R² = 0,9996</strong>.
                 </p>
             </div>
         </div>
@@ -1517,14 +1525,14 @@
                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ NON → bon score ✓
                 </div>
                 <p style="color:var(--on-surface-variant); font-size:0.92rem; line-height:1.8;">
-                    XGBoost construit <strong>500 arbres</strong>, chacun corrigeant les erreurs du precedent
+                    XGBoost construit <strong>200 arbres</strong>, chacun corrigeant les erreurs du precedent
                     (principe du <em>Gradient Boosting</em>). La prediction finale est la somme de tous les arbres.
                 </p>
             </div>
             <div>
                 <div class="math-block" style="margin-top:0;">
                     <div class="math-label">Prediction (somme des arbres)</div>
-                    <div>$$\hat{y} = \sum_{k=1}^{K} f_k(x), \quad K = 500$$</div>
+                    <div>$$\hat{y} = \sum_{k=1}^{K} f_k(x), \quad K = 200$$</div>
                 </div>
                 <div class="math-block">
                     <div class="math-label">Fonction objectif minimisee</div>
@@ -1555,11 +1563,11 @@
         <table class="data-table">
             <thead><tr><th>Parametre</th><th>Valeur</th><th>Pourquoi cette valeur ?</th></tr></thead>
             <tbody>
-                <tr><td><code>n_estimators</code></td><td>500</td><td>Nombre d'arbres — assez pour la precision, sans trop ralentir</td></tr>
-                <tr><td><code>max_depth</code></td><td>5</td><td>Profondeur max — limite la complexite, evite le surapprentissage</td></tr>
+                <tr><td><code>n_estimators</code></td><td>200</td><td>Nombre d'arbres — suffisant pour un petit jeu de donnees</td></tr>
+                <tr><td><code>max_depth</code></td><td>3</td><td>Arbres peu profonds — evite le surapprentissage sur 90 exemples</td></tr>
                 <tr><td><code>learning_rate</code></td><td>0.05</td><td>Pas faible = apprentissage prudent et stable</td></tr>
-                <tr><td><code>subsample</code></td><td>0.8</td><td>Chaque arbre voit 80% des donnees = plus de diversite</td></tr>
-                <tr><td><code>colsample_bytree</code></td><td>0.8</td><td>Chaque arbre voit 80% des features = meilleure generalisation</td></tr>
+                <tr><td><code>subsample</code></td><td>0.9</td><td>Chaque arbre voit 90% des donnees = un peu de diversite</td></tr>
+                <tr><td><code>colsample_bytree</code></td><td>0.9</td><td>Chaque arbre voit 90% des features = meilleure generalisation</td></tr>
                 <tr><td><code>random_state</code></td><td>42</td><td>Graine fixe = resultats reproductibles a chaque execution</td></tr>
             </tbody>
         </table>
@@ -1573,19 +1581,18 @@
             </div>
             <pre><code class="language-python">def train_optiplua_model(data_path, model_output='models/optiplua_model.pkl'):
     df = pd.read_csv(data_path)
-    X, y, weights = preprocess_data(df, is_training=True)
+    X, y = build_timetable_dataset(df)   # 1 ligne = 1 emploi du temps
 
     # Separation 80% entrainement / 20% test
-    X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
-        X, y, weights, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42)
 
     model = xgb.XGBRegressor(
-        n_estimators=500, max_depth=5, learning_rate=0.05,
-        subsample=0.8, colsample_bytree=0.8,
+        n_estimators=200, max_depth=3, learning_rate=0.05,
+        subsample=0.9, colsample_bytree=0.9,
         objective='reg:squarederror', n_jobs=-1, random_state=42)
 
-    # Entrainement avec poids d'echantillons (feedback humain prioritaire)
-    model.fit(X_train, y_train, sample_weight=w_train)
+    model.fit(X_train, y_train)
 
     joblib.dump(model, model_output)   # Sauvegarde du modele
     return model</code></pre>
@@ -1596,6 +1603,27 @@
                     La separation 80/20 permet d'evaluer le modele sur des donnees <em>qu'il n'a jamais vues</em>,
                     pour mesurer sa vraie capacite de generalisation.
                 </p>
+            </div>
+        </div>
+
+        <div class="glass" style="margin-top:2rem;">
+            <h3 style="margin-bottom:1.5rem;">Resultats du modele</h3>
+            <div class="stat-row">
+                <div class="stat-box"><div class="num" style="color:var(--accent-green);">0.9996</div><div class="desc">R² sur le jeu de test</div></div>
+                <div class="stat-box"><div class="num" style="color:var(--secondary);">0.50</div><div class="desc">RMSE (echelle 0-100)</div></div>
+                <div class="stat-box"><div class="num" style="color:var(--primary);">90</div><div class="desc">Emplois du temps</div></div>
+                <div class="stat-box"><div class="num" style="color:var(--accent-orange);">16 → 97</div><div class="desc">Plage des scores</div></div>
+            </div>
+            <div class="why-box" style="margin-bottom:0; margin-top:1.5rem;">
+                <span class="material-symbols-outlined why-icon">verified</span>
+                <div class="why-content">
+                    <div class="why-label">Variables les plus importantes</div>
+                    <p>
+                        L'importance des features confirme la coherence du modele : les <strong>trous des enseignants</strong>
+                        (~0,80) puis ceux des <strong>classes</strong> (~0,19) dominent — exactement les termes les plus lourds
+                        du score heuristique. Le modele a bien <strong>retrouve la structure</strong> de l'oracle qu'il imite.
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -1782,7 +1810,7 @@ st.session_state['variants'] = variants</code></pre>
             <div class="arch-modules">
                 <div class="arch-module"><code>train_model.py</code> — Entrainement</div>
                 <div class="arch-module"><code>models/feature_engineering.py</code> — Features</div>
-                <div class="arch-module"><code>src/bootstrap_data.py</code> — Donnees ML</div>
+                <div class="arch-module"><code>generate_ml_dataset.py</code> — Dataset ML (timetable-level)</div>
                 <div class="arch-module"><code>src/feedback_handler.py</code> — Feedback humain</div>
             </div>
         </div>
@@ -1828,7 +1856,7 @@ st.session_state['variants'] = variants</code></pre>
             </div>
             <div class="tech-card">
                 <div class="tech-head"><span class="tech-emoji">&#127919;</span><div><div class="tech-name">Scikit-learn</div><div class="tech-version">v1.2+</div></div></div>
-                <p><strong>Preprocessing ML.</strong> Fournit LabelEncoder, MinMaxScaler, train_test_split et les metriques (MSE, R²). La boite a outils du ML.</p>
+                <p><strong>Outils ML.</strong> Fournit <code>train_test_split</code> (separation train/test) et les metriques d'evaluation (MSE, RMSE, R²). La boite a outils du ML.</p>
             </div>
             <div class="tech-card">
                 <div class="tech-head"><span class="tech-emoji">&#128200;</span><div><div class="tech-name">NumPy</div><div class="tech-version">v1.23+</div></div></div>
@@ -1872,10 +1900,10 @@ st.session_state['variants'] = variants</code></pre>
             <h3>Ce que nous avons realise</h3>
             <ul class="styled-list">
                 <li><strong>Un generateur de donnees synthetiques</strong> realistes pour 3 types d'etablissements.</li>
-                <li><strong>Un moteur heuristique</strong> respectant 7 contraintes dures, generant des emplois du temps valides en quelques secondes.</li>
+                <li><strong>Un moteur heuristique</strong> respectant 9 contraintes dures (C1-C9), generant des emplois du temps valides en quelques secondes.</li>
                 <li><strong>Une analyse exploratoire</strong> complete (9 visualisations) validant la qualite des donnees.</li>
                 <li><strong>Un systeme de scoring</strong> mathematique mesurant la qualite (trous, remplissage, surcharge).</li>
-                <li><strong>Un modele XGBoost</strong> entraine sur 182 000 seances, avec feature engineering et boucle de feedback humain.</li>
+                <li><strong>Un modele XGBoost</strong> au niveau de l'emploi du temps (R² = 0,9996), discriminant nettement les variantes, avec boucle de feedback humain.</li>
                 <li><strong>Un dashboard Streamlit</strong> complet : authentification, saisie, generation et visualisation.</li>
             </ul>
             <div class="why-box" style="margin-bottom:0; margin-top:1.5rem;">
@@ -1902,7 +1930,7 @@ st.session_state['variants'] = variants</code></pre>
         </div>
         <p>
             Projet de recherche appliquee — Optimisation des emplois du temps scolaires par IA<br>
-            Youssef EL ALEM &amp; Douae MOUSSAOUI — 2024 / 2025
+            Youssef EL ALEM &amp; Douae MOUSSAOUI — 2025 / 2026
         </p>
     </div>
 </footer>

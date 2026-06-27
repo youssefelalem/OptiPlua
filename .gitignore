@@ -1,15 +1,40 @@
-visualization
+# =====================================================================
+#  OptiPlua — fichiers a NE PAS publier sur GitHub
+#  (seul le code source de l'application est versionne)
+# =====================================================================
 
-# Python
+# ── Python ───────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
 
-# Node
+# ── Node ─────────────────────────────────────────────────────────────
 node_modules/
 
-# Generated files
+# ── OS / IDE / outils ────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/
+visualization
+
+# ── Livrables academiques (hors code de l'application) ───────────────
+rapport/
+presentation/
+
+# ── Donnees sensibles / d'execution ──────────────────────────────────
+data/users.json
+data/human_feedback.csv
+
+# ── Jeux de donnees lourds (regenerables via les scripts) ────────────
+data/bootstrap_schedules.csv
+data/final_schedules_ml.csv
+
+# ── Documents bureautiques generes ───────────────────────────────────
 *.pptx
 *.docx
-
-# Sensitive data
-data/users.json
