@@ -27,6 +27,11 @@ visualization
 rapport/
 presentation/
 
+# ── Hors code source de l'application ────────────────────────────────
+notebooks/
+logo/
+website/
+
 # ── Donnees sensibles / d'execution ──────────────────────────────────
 data/users.json
 data/human_feedback.csv
