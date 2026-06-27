@@ -11,7 +11,7 @@ import json
 import hashlib
 import base64
 from pathlib import Path
-from simulator import generer_n_variantes, HEURES_PAR_TYPE, ALL_HEURES
+from simulator import generer_n_variantes, calculer_score_emploi, HEURES_PAR_TYPE, ALL_HEURES
 from scorer import TimetableScorer
 
 # ── Configuration ────────────────────────────────────────────────────────────
@@ -1602,6 +1602,17 @@ def _show_cta_section():
 
 
 # ── Generation Page ──────────────────────────────────────────────────────────
+@st.cache_resource
+def get_scorer() -> TimetableScorer:
+    """Load the ML scorer once per session (the model load costs ~2s)."""
+    return TimetableScorer()
+
+
+def _fmt_dur(seconds: float) -> str:
+    """Human-friendly duration: seconds if >= 1s, else milliseconds."""
+    return f"{seconds:.2f} s" if seconds >= 1 else f"{seconds * 1000:.0f} ms"
+
+
 def render_generation_page():
     st.markdown("""
     <div class="page-header">
@@ -1676,7 +1687,8 @@ def render_generation_page():
 
         st.markdown('<div style="margin-top:1.5rem;"></div>', unsafe_allow_html=True)
 
-        if st.button("Optimiser l'Emploi du Temps", type="primary", use_container_width=True):
+        # --- Etape 1 : GENERATION des emplois (independante du scoring) ---
+        if st.button("1.  Generer les emplois du temps", type="primary", use_container_width=True):
             progress = st.progress(0, text="Initialisation du moteur heuristique...")
             t0 = time.time()
 
@@ -1685,14 +1697,14 @@ def render_generation_page():
                     "Initialisation du moteur heuristique...",
                     "Allocation des salles...",
                     "Detection des collisions...",
-                    "Scoring des candidats...",
-                    "Optimisation des contraintes...",
-                    "Finalisation des resultats...",
+                    "Placement des seances...",
+                    "Resolution des contraintes...",
+                    "Finalisation des emplois...",
                 ]
                 idx = min(int(pct * len(msgs)), len(msgs) - 1)
                 progress.progress(pct, text=msgs[idx])
 
-            variants = generer_n_variantes(
+            raw_variants = generer_n_variantes(
                 st.session_state['df_enseignants'],
                 st.session_state['df_salles'],
                 st.session_state['df_matieres'],
@@ -1702,23 +1714,101 @@ def render_generation_page():
                 progress_callback=update,
                 heures_par_type=custom_heures,
             )
+            t_generation = time.time() - t0
+            progress.progress(1.0, text="Generation terminee !")
 
+            st.session_state['raw_variants'] = raw_variants
+            st.session_state.pop('variants', None)        # invalide tout scoring precedent
+            st.session_state['generation_time'] = t_generation
+
+            st.session_state.setdefault('runs', []).append({
+                'time': time.strftime('%H:%M:%S'),
+                'operation': 'Generation',
+                'method': '—',
+                'n': len(raw_variants),
+                'duration': t_generation,
+                't_load': 0.0,
+                'score_min': None,
+                'score_max': None,
+            })
+            st.success(
+                f"**{len(raw_variants)}** emplois du temps generes en **{t_generation:.1f}s**. "
+                "Choisissez une methode, puis cliquez sur **Calculer le score**."
+            )
+
+        # --- Etape 2 : SCORING des emplois deja generes (methode au choix) ---
+        if st.button(f"2.  Calculer le score  ({scoring})", use_container_width=True,
+                     disabled='raw_variants' not in st.session_state):
+            raw_variants = st.session_state['raw_variants']
+            progress = st.progress(0, text="Scoring en cours...")
+
+            t_load = 0.0
             if scoring_method == 'ml':
-                progress.progress(1.0, text="Scoring ML en cours...")
-                scorer = TimetableScorer()
-                variants = scorer.rank_variants(variants, method='ml')
-
-            elapsed = time.time() - t0
-            progress.progress(1.0, text="Optimisation terminee !")
+                progress.progress(0.3, text="Chargement du modele ML...")
+                scorer = get_scorer()
+                t_l = time.time()
+                scorer._load_ml()                       # une fois par session (cache)
+                t_load = time.time() - t_l
+                progress.progress(0.6, text="Scoring ML en cours...")
+                t_s = time.time()
+                variants = scorer.rank_variants(raw_variants, method='ml')
+                t_scoring = time.time() - t_s
+                method_label = "ML (XGBoost)"
+            else:
+                progress.progress(0.5, text="Scoring heuristique en cours...")
+                t_s = time.time()
+                for df_emp, _, _ in raw_variants:
+                    calculer_score_emploi(df_emp)
+                t_scoring = time.time() - t_s
+                variants = sorted(raw_variants, key=lambda x: x[1], reverse=True)
+                method_label = "Heuristique"
+            progress.progress(1.0, text="Scoring termine !")
 
             st.session_state['variants'] = variants
-            st.session_state['generation_time'] = elapsed
-
             scores = [v[1] for v in variants]
+            score_min, score_max = min(scores), max(scores)
+
+            st.session_state.setdefault('runs', []).append({
+                'time': time.strftime('%H:%M:%S'),
+                'operation': 'Scoring',
+                'method': method_label,
+                'n': len(variants),
+                'duration': t_scoring,
+                't_load': t_load,
+                'score_min': score_min,
+                'score_max': score_max,
+            })
             st.success(
-                f"**{len(variants)}** variantes generees en **{elapsed:.1f}s** — "
-                f"Scores: **{min(scores):.1f}** a **{max(scores):.1f}** / 100"
+                f"Scoring **{method_label}** en **{t_scoring:.2f}s** — "
+                f"Scores: **{score_min:.1f}** a **{score_max:.1f}** / 100"
             )
+
+        runs = st.session_state.get('runs', [])
+        if runs:
+            st.markdown(
+                '<div class="config-title" style="margin-top:1.5rem;">Historique des operations</div>'
+                '<div class="config-desc">Generation et scoring sont mesures separement. Generez une fois, '
+                'puis scorez avec chaque methode pour comparer les temps et les scores.</div>',
+                unsafe_allow_html=True,
+            )
+            hist_df = pd.DataFrame([
+                {
+                    '#': i + 1,
+                    'Heure': r['time'],
+                    'Operation': r['operation'],
+                    'Methode': r['method'],
+                    'Variantes': r['n'],
+                    'Duree': _fmt_dur(r['duration']),
+                    'Chargement ML': _fmt_dur(r['t_load']) if r.get('t_load') else '—',
+                    'Score min': round(r['score_min'], 1) if r['score_min'] is not None else '—',
+                    'Score max': round(r['score_max'], 1) if r['score_max'] is not None else '—',
+                }
+                for i, r in enumerate(runs)
+            ])
+            st.dataframe(hist_df, use_container_width=True, hide_index=True)
+            if st.button("Effacer l'historique", key="clear_history"):
+                st.session_state['runs'] = []
+                st.rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
 
